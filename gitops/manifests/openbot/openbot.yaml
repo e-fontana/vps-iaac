@@ -1,0 +1,102 @@
+# OpenBot (https://openbot.run, github.com/nightly-labs/openbot) como servidor self-hosted: agentes de IA
+# persistentes que você usa pelo app desktop, pelo celular ou por openbot.run/app (não há interface web aqui).
+#
+# Como a imagem oficial em Docker (docs/docker.md do projeto, tag v0.72.0), adaptada ao k3s:
+#   - 1 réplica e estratégia Recreate: o volume /data só pode estar em um contêiner por vez.
+#   - perfil seccomp "Localhost" openbot/openbot.json (instalado pelo DaemonSet seccomp-installer):
+#     o padrão do Docker + user namespaces, de que o sandbox do Electron precisa. Nunca use Unconfined.
+#   - /dev/shm de 1 GiB em memória (o "shm_size: 1g" do Compose): o Chromium precisa dele.
+#   - 60 s para parar (stop_grace_period): o OpenBot encerra os agentes e fecha o banco antes de sair.
+#   - Sem Service e sem Ingress: o OpenBot só faz conexões de saída (conta, provedores, Signal/TURN).
+#
+# Dados: tudo em /data (SQLite, chaveiro, espaços dos agentes, logins dos provedores), num volume
+# local-path (disco da VPS, sem backup automático). Mantenha /data como uma unidade: sem o chaveiro,
+# os dados criptografados não abrem.
+#
+# Pré-requisitos: nenhum Secret obrigatório. Chaves de provedores (XAI_API_KEY, CURSOR_API_KEY...) vão,
+# se quiser, no Secret OPCIONAL "openbot-env" (templates/openbot/create-env-secret.sh). Todos os agentes
+# conseguem ler essas variáveis.
+# Depois do primeiro Sync, faça o login uma vez (código por e-mail): veja docs/aplicacoes/openbot.md.
+#
+# Segurança: os agentes rodam com acesso total dentro do contêiner, sem pedir confirmação. Por isso:
+# sem token da ServiceAccount, sem variáveis de Services, e a NetworkPolicy (networkpolicy.yaml)
+# impede o pod de alcançar o cluster, a VCN, a VPN e o metadata da Oracle.
+#
+# Licença: PolyForm Noncommercial 1.0.0 (uso pessoal; uso comercial exige licença da Nightly Labs).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: openbot-data
+  labels:
+    app: openbot
+spec:
+  accessModes: ["ReadWriteOnce"]
+  # local-path não aplica o tamanho (usa o disco da VPS); o valor documenta quanto se espera usar.
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openbot
+  labels:
+    app: openbot
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openbot
+  template:
+    metadata:
+      labels:
+        app: openbot
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      terminationGracePeriodSeconds: 75
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: Localhost
+          localhostProfile: openbot/openbot.json
+      containers:
+        - name: openbot
+          # Versão fixa (nada de latest). O OpenBot nunca volta para uma versão mais antiga: não faça
+          # downgrade da tag com o mesmo volume. Para atualizar, veja docs/aplicacoes/openbot.md.
+          image: ghcr.io/nightly-labs/openbot:0.72.0
+          envFrom:
+            - secretRef:
+                name: openbot-env
+                optional: true
+          securityContext:
+            # = no-new-privileges do Docker. As capabilities ficam as padrão do containerd (as mesmas do
+            # Docker): o perfil seccomp foi gerado para esse conjunto, e como UID 1000 elas não ficam ativas.
+            allowPrivilegeEscalation: false
+          resources:
+            requests:
+              cpu: 250m
+              memory: 1Gi
+            limits:
+              # O OpenBot regula os turnos simultâneos pela memória disponível (2 turnos até 5 GiB).
+              # /dev/shm e os tmpfs contam neste limite.
+              memory: 4Gi
+          volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: openbot-data
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 1Gi

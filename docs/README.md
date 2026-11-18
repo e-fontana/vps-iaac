@@ -29,6 +29,7 @@
 | Criar tokens (GitHub) e dar acesso à imagem privada | [Imagem privada e tokens](aplicacoes/imagem-privada-e-tokens.md) |
 | Alterar a estrutura do banco | [Migrações do banco](aplicacoes/migracoes-do-banco.md) |
 | Dar um endereço (domínio) a uma aplicação | [Expor com domínio](aplicacoes/expor-com-dominio.md) |
+| Instalar, usar ou atualizar o OpenBot (agentes de IA) | [OpenBot](aplicacoes/openbot.md) |
 | Diagnosticar um erro | [Solução de problemas](suporte/solucao-de-problemas.md) |
 
 ## Organização das pastas
@@ -41,7 +42,7 @@ docs/
 ├── gitops/                        como o ArgoCD organiza o cluster
 ├── servicos/                      Postgres, Redis e armazenamento S3
 ├── observabilidade/               logs, traces, métricas e o dashboard
-├── aplicacoes/                    publicar aplicações: checklist, CI/CD, tokens, migrações
+├── aplicacoes/                    publicar aplicações: checklist, CI/CD, tokens, migrações, OpenBot
 └── suporte/                       solução de problemas e guia para assistentes de IA
 ```
 

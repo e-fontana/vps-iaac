@@ -1,0 +1,28 @@
+# OpenBot (agentes de IA persistentes, https://openbot.run) como servidor self-hosted, em gitops/manifests/openbot.
+# Ordem do sync (ondas): namespace (-3), ConfigMap do perfil seccomp (-2), DaemonSet que instala o perfil
+# no nó (-1), e só então o OpenBot, o volume e a NetworkPolicy (0).
+#
+# Automática: não depende de Secret. O Secret "openbot-env" (chaves de provedores) é opcional e pode ser
+# criado a qualquer momento com templates/openbot/create-env-secret.sh.
+# Depois do primeiro sync, faça o login uma vez (código por e-mail) e escolha o servidor no app:
+# docs/aplicacoes/openbot.md.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbot
+  namespace: argocd
+  labels:
+    group: workloads
+spec:
+  project: workloads
+  source:
+    repoURL: https://github.com/e-fontana/vps-iac.git
+    targetRevision: main
+    path: gitops/manifests/openbot
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openbot
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

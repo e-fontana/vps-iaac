@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openbot
+  annotations:
+    # Antes do ConfigMap e do DaemonSet do seccomp (onda -2/-1) e do OpenBot (onda 0).
+    argocd.argoproj.io/sync-wave: "-3"

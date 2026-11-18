@@ -1,0 +1,85 @@
+# Instala o perfil seccomp do OpenBot no nó, para o pod do OpenBot usá-lo como "Localhost".
+#
+# O kubelet só lê perfis Localhost de arquivos no disco do nó, em <root-dir do kubelet>/seccomp
+# (no k3s: /var/lib/kubelet/seccomp). Este DaemonSet copia o ConfigMap openbot-seccomp para
+# /var/lib/kubelet/seccomp/openbot/openbot.json e depois fica parado (contêiner pause, ~1 MiB).
+# Onda -1: o ArgoCD só aplica o OpenBot (onda 0) depois que este pod estiver pronto.
+#
+# Por que um DaemonSet e não um arquivo instalado à mão: fica no Git, volta sozinho se a VM for
+# recriada e é reaplicado quando o perfil muda (o nome do ConfigMap leva um hash, veja kustomization.yaml).
+# Acesso ao host: só a pasta /var/lib/kubelet/seccomp/openbot, como root. Nada mais do nó é montado.
+#
+# Docs: docs/aplicacoes/openbot.md
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: seccomp-installer
+  labels:
+    app: seccomp-installer
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  selector:
+    matchLabels:
+      app: seccomp-installer
+  template:
+    metadata:
+      labels:
+        app: seccomp-installer
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      initContainers:
+        - name: install
+          image: busybox:1.37.0
+          # Grava num arquivo temporário e renomeia: o kubelet nunca lê um perfil pela metade.
+          command: ["sh", "-c"]
+          args:
+            - |
+              set -eu
+              cp /profile/seccomp.json /host/.openbot.json.tmp
+              chmod 0644 /host/.openbot.json.tmp
+              mv /host/.openbot.json.tmp /host/openbot.json
+              echo "perfil seccomp instalado em /var/lib/kubelet/seccomp/openbot/openbot.json"
+          securityContext:
+            runAsUser: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              memory: 32Mi
+          volumeMounts:
+            - name: profile
+              mountPath: /profile
+              readOnly: true
+            - name: host-seccomp
+              mountPath: /host
+      containers:
+        - name: pause
+          image: registry.k8s.io/pause:3.10
+          securityContext:
+            runAsUser: 65535
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 1m
+              memory: 4Mi
+            limits:
+              memory: 16Mi
+      volumes:
+        - name: profile
+          configMap:
+            name: openbot-seccomp
+        - name: host-seccomp
+          hostPath:
+            path: /var/lib/kubelet/seccomp/openbot
+            type: DirectoryOrCreate

@@ -46,6 +46,10 @@
 | **Alloy** | O coletor que recebe os dados da aplicação e os entrega ao Prometheus, Loki e Tempo. |
 | **DNS (registro A)** | A tabela que diz que `api.eduardofontana.dev` fica em tal IP. É configurada na Cloudflare. |
 | **ACL (Redis)** | Lista de permissões de um usuário do Redis (quais chaves e comandos pode usar). |
+| **seccomp** | Lista das chamadas ao kernel que um contêiner pode fazer; o resto é bloqueado. O OpenBot usa um perfil próprio. |
+| **User namespace** | Recurso do Linux que dá a um processo um "root de mentira", isolado. O sandbox do Chromium/Electron depende dele. |
+| **DaemonSet** | A instrução "rode um pod deste em cada nó". Aqui instala o perfil seccomp do OpenBot no nó. |
+| **NetworkPolicy** | Regra de firewall entre pods: diz com quem um pod pode falar. |
 
 ## Veja também
 - [Visão geral](visao-geral.md) · [Índice](../README.md)

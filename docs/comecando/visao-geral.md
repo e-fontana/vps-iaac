@@ -21,6 +21,7 @@ O acesso é só pela **VPN Tailscale**. Nada é publicado na internet aberta: se
  │    └─ api.eduardofontana.dev      → sua API                                 │
  │                                                                             │
  │  Serviços compartilhados: Postgres · Redis · SeaweedFS (S3)                 │
+ │  OpenBot (agentes de IA; sem endereço, só conexões de saída)                │
  │  Monitoramento: Alloy → Prometheus (métricas) · Loki (logs) · Tempo (traces)│
  └─────────────────────────────────────────────────────────────────────────────┘
 ```

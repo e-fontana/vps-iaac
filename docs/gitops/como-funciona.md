@@ -18,8 +18,8 @@ gitops/
 │   ├── networking/           # cert-manager, cert-manager-config, traefik, argocd-ingress, tailscale-operator
 │   ├── observability/        # prometheus, loki, tempo, alloy, grafana, grafana-dashboards
 │   ├── infra/                # postgres, redis (compartilhados) e seaweedfs (S3 local)
-│   └── workloads/            # api (aplicações próprias)
-└── manifests/                # YAML simples usados pelas Applications (ClusterIssuer, Ingress, API, bancos, dashboards do Grafana)
+│   └── workloads/            # api (aplicações próprias), openbot
+└── manifests/                # YAML simples usados pelas Applications (ClusterIssuer, Ingress, API, bancos, dashboards do Grafana, OpenBot)
 ```
 
 A Application `root` (criada pelo bootstrap da VM) observa `gitops/apps` (definido por `gitops_path` no tfvars). Cada **grupo** é uma Application que observa a própria pasta em `groups/`. Na tela do ArgoCD os serviços aparecem agrupados: abra `networking` ou `observability` para ver os filhos, ou filtre a lista por **Project**.
