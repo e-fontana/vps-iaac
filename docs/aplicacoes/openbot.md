@@ -76,6 +76,8 @@ O `sanar-proxy` resolve: é um [LiteLLM](https://github.com/BerriAI/litellm) na 
 
 **Testado localmente** (Docker, amd64, mesma imagem `ghcr.io/berriai/litellm:v1.108.10`, contra o router de verdade): texto, streaming, chamada de ferramenta, `reasoning_effort`, a lista de modelos e a recusa (`401`) sem a chave mestra; também como não-root e com o sistema de arquivos só de leitura. Usa ~550 MiB parado.
 
+**Verificado no cluster (18/11/2026):** o proxy fica pronto em ~1 minuto, com as sondas do kubelet passando pela NetworkPolicy; de dentro do pod do OpenBot, `/v1/models` lista os dois modelos e `/v1/chat/completions` responde (`finish_reason: stop`); sem a chave mestra, `401`; o pod do Redis (outra namespace) não alcança o proxy. Ainda não verificado: um agente do OpenBot usando o provedor de ponta a ponta.
+
 ## Como saber que deu certo
 - No ArgoCD, a Application `openbot` fica `Synced` e `Healthy`.
 - `ssh ubuntu@100.95.76.83 'sudo k3s kubectl -n openbot get pods,pvc'` mostra o `seccomp-installer-...` e o `openbot-...` em `Running` e o volume `Bound`.
