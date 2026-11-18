@@ -1,0 +1,23 @@
+# Configuração do LiteLLM do sanar-proxy (vira o ConfigMap "sanar-proxy-config-<hash>", veja kustomization.yaml).
+#
+# O Sanar Router só aceita a chave na Responses API (/v1/responses): em /v1/chat/completions responde
+# 403 router_model_not_allowed. O OpenBot (OpenCode) só fala /chat/completions com provedores
+# personalizados. O prefixo "openai/responses/" faz o LiteLLM receber /chat/completions e chamar o
+# /responses do router, convertendo texto, streaming e chamadas de ferramenta.
+#
+# Para expor outro modelo do router, acrescente um item com o mesmo formato. As chaves vêm do Secret
+# "sanar-proxy" (templates/openbot/create-sanar-proxy-secret.sh). Docs: docs/aplicacoes/openbot.md
+model_list:
+  - model_name: intermediario
+    litellm_params:
+      model: openai/responses/intermediario
+      api_base: https://router.techpirata.com.br/v1
+      api_key: os.environ/SANAR_API_KEY
+  - model_name: avancado
+    litellm_params:
+      model: openai/responses/avancado
+      api_base: https://router.techpirata.com.br/v1
+      api_key: os.environ/SANAR_API_KEY
+litellm_settings:
+  # Descarta parâmetros que a Responses API não aceita, em vez de devolver erro ao OpenCode.
+  drop_params: true

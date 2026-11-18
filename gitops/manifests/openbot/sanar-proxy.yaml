@@ -1,0 +1,107 @@
+# sanar-proxy: LiteLLM entre o OpenBot e o Sanar Router (router.techpirata.com.br).
+#
+# O router só aceita a chave na Responses API, e o OpenBot só chama /chat/completions em provedores
+# personalizados. O LiteLLM recebe /chat/completions e chama /responses (sanar-proxy-config.yaml).
+# Testado localmente (Docker, amd64) contra o router: texto, streaming, chamada de ferramenta e
+# reasoning_effort.
+#
+# Endereço (só para o pod do OpenBot, pela NetworkPolicy): http://sanar-proxy.openbot.svc.cluster.local:4000/v1
+#
+# Pré-requisito: o Secret "sanar-proxy" (SANAR_API_KEY e LITELLM_MASTER_KEY), criado por
+# templates/openbot/create-sanar-proxy-secret.sh ANTES do push: sem ele o pod fica em
+# CreateContainerConfigError. No OpenBot, o provedor usa a LITELLM_MASTER_KEY como chave de API.
+#
+# Memória: ~550 MiB parado (1 worker). Docs: docs/aplicacoes/openbot.md
+apiVersion: v1
+kind: Service
+metadata:
+  name: sanar-proxy
+  labels:
+    app: sanar-proxy
+spec:
+  selector:
+    app: sanar-proxy
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sanar-proxy
+  labels:
+    app: sanar-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sanar-proxy
+  template:
+    metadata:
+      labels:
+        app: sanar-proxy
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: litellm
+          image: ghcr.io/berriai/litellm:v1.108.10
+          args: ["--config", "/config/config.yaml", "--port", "4000", "--num_workers", "1"]
+          env:
+            - name: DISABLE_ADMIN_UI
+              value: "True"
+          envFrom:
+            - secretRef:
+                name: sanar-proxy
+          ports:
+            - name: http
+              containerPort: 4000
+          # Sobe em ~30 s no amd64; o startupProbe dá até 3 min no arm64.
+          startupProbe:
+            httpGet:
+              path: /health/liveliness
+              port: http
+            periodSeconds: 5
+            failureThreshold: 36
+          readinessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: http
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/liveliness
+              port: http
+            periodSeconds: 30
+            timeoutSeconds: 5
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 640Mi
+            limits:
+              memory: 1Gi
+          volumeMounts:
+            - name: config
+              mountPath: /config
+              readOnly: true
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: config
+          configMap:
+            name: sanar-proxy-config
+        - name: tmp
+          emptyDir:
+            sizeLimit: 256Mi

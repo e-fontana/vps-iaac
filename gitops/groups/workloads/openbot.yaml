@@ -2,8 +2,10 @@
 # Ordem do sync (ondas): namespace (-3), ConfigMap do perfil seccomp (-2), DaemonSet que instala o perfil
 # no nó (-1), e só então o OpenBot, o volume e a NetworkPolicy (0).
 #
-# Automática: não depende de Secret. O Secret "openbot-env" (chaves de provedores) é opcional e pode ser
-# criado a qualquer momento com templates/openbot/create-env-secret.sh.
+# Automática. Pré-requisito: o Secret "sanar-proxy" (proxy LiteLLM para o Sanar Router), criado por
+# templates/openbot/create-sanar-proxy-secret.sh ANTES do push; sem ele só o sanar-proxy fica em
+# CreateContainerConfigError (o OpenBot sobe normalmente). O Secret "openbot-env" (chaves de provedores)
+# é opcional e pode ser criado a qualquer momento com templates/openbot/create-env-secret.sh.
 # Depois do primeiro sync, faça o login uma vez (código por e-mail) e escolha o servidor no app:
 # docs/aplicacoes/openbot.md.
 apiVersion: argoproj.io/v1alpha1

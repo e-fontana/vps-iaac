@@ -1,8 +1,15 @@
-# Isola o OpenBot: os agentes executam comandos e acessam a rede sem pedir confirmação, então o pod
-# não pode alcançar o resto da VPS (Postgres, Redis, SeaweedFS, API, Grafana, ArgoCD).
+# Isola o OpenBot e o sanar-proxy: os agentes executam comandos e acessam a rede sem pedir confirmação,
+# então nenhum dos dois pode alcançar o resto da VPS (Postgres, Redis, SeaweedFS, API, Grafana, ArgoCD).
 #
-# Entrada: nada (o OpenBot não recebe conexões; o app conecta por Signal/TURN, que são de saída).
-# Saída: DNS do cluster (CoreDNS) e a internet, menos as faixas privadas:
+# openbot
+#   Entrada: nada (o OpenBot não recebe conexões; o app conecta por Signal/TURN, que são de saída).
+#   Saída: DNS do cluster, o sanar-proxy (porta 4000) e a internet, menos as faixas privadas.
+# sanar-proxy
+#   Entrada: só do pod do OpenBot, na porta 4000 (as sondas do kubelet, vindas do próprio nó, o
+#   kube-router sempre deixa passar).
+#   Saída: DNS do cluster e a internet, menos as faixas privadas (ele só precisa do Sanar Router).
+#
+# Faixas privadas bloqueadas:
 #   10.0.0.0/8      pods e Services do k3s (10.42/10.43) e a VCN da Oracle (10.0.0.0/16, inclui o nó)
 #   172.16.0.0/12, 192.168.0.0/16  outras faixas privadas
 #   100.64.0.0/10   a VPN Tailscale (o IP 100.95.76.83 da VPS e os seus dispositivos)
@@ -25,6 +32,55 @@ spec:
     - Ingress
     - Egress
   ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app: sanar-proxy
+      ports:
+        - protocol: TCP
+          port: 4000
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: sanar-proxy
+spec:
+  podSelector:
+    matchLabels:
+      app: sanar-proxy
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: openbot
+      ports:
+        - protocol: TCP
+          port: 4000
   egress:
     - to:
         - namespaceSelector:

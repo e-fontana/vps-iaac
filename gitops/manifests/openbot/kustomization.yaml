@@ -5,14 +5,19 @@ resources:
 - namespace.yaml
 - seccomp-installer.yaml
 - openbot.yaml
+- sanar-proxy.yaml
 - networkpolicy.yaml
+configMapGenerator:
 # Perfil seccomp do OpenBot no formato OCI, gerado de templates/openbot/seccomp-docker.json por
 # templates/openbot/seccomp-docker-para-oci.py. O sufixo de hash no nome do ConfigMap faz o
 # DaemonSet seccomp-installer reiniciar (e regravar o arquivo no nó) quando o perfil muda.
-configMapGenerator:
 - name: openbot-seccomp
   files:
   - seccomp.json
   options:
     annotations:
       argocd.argoproj.io/sync-wave: "-2"
+# Configuração do LiteLLM do sanar-proxy. O hash no nome reinicia o proxy quando ela muda.
+- name: sanar-proxy-config
+  files:
+  - config.yaml=sanar-proxy-config.yaml

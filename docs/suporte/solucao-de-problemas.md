@@ -2,7 +2,7 @@
 
 > **Resumo:** tabela de sintomas, causas prováveis e o que fazer, mais os comandos de diagnóstico mais úteis. Comece pelo sintoma.
 > **Para quem:** qualquer pessoa, quando algo não funciona. **Dificuldade:** iniciante.
-> **Palavras-chave:** erro, problema, não funciona, CreateContainerConfigError, ImagePullBackOff, NOPERM, 403, OutOfSync, certificado, exec format error, openbot, seccomp, diagnóstico, logs.
+> **Palavras-chave:** erro, problema, não funciona, CreateContainerConfigError, ImagePullBackOff, NOPERM, 403, OutOfSync, certificado, exec format error, openbot, seccomp, sanar-proxy, litellm, diagnóstico, logs.
 
 ## Por sintoma
 | Sintoma | Causa provável | Onde ver mais |
@@ -31,6 +31,7 @@
 | Gravações no S3 travam, "Not enough data nodes" | Disco da VPS acima de 95% (limite `minFreeSpace`) | [S3](../servicos/armazenamento-s3.md) |
 | OpenBot em `CreateContainerError` com `seccomp` | O perfil não foi instalado no nó (DaemonSet `seccomp-installer`) | [OpenBot](../aplicacoes/openbot.md) |
 | OpenBot sai logo, log fala de *user namespace* / *sandbox* | AppArmor ou kernel bloqueando user namespaces | [OpenBot](../aplicacoes/openbot.md) |
+| OpenBot: provedor recusa a chave (*refused its API key or headers*) com a chave certa | O endpoint não aceita `/chat/completions` (caso do Sanar Router); use o `sanar-proxy` | [OpenBot](../aplicacoes/openbot.md) |
 
 ## Comandos de diagnóstico
 Todos pela VPN. Abra um terminal na VPS com `ssh ubuntu@100.95.76.83` ou prefixe cada comando com `ssh ubuntu@100.95.76.83`.

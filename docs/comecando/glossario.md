@@ -50,6 +50,8 @@
 | **User namespace** | Recurso do Linux que dá a um processo um "root de mentira", isolado. O sandbox do Chromium/Electron depende dele. |
 | **DaemonSet** | A instrução "rode um pod deste em cada nó". Aqui instala o perfil seccomp do OpenBot no nó. |
 | **NetworkPolicy** | Regra de firewall entre pods: diz com quem um pod pode falar. |
+| **LiteLLM** | Um proxy que fala o formato da OpenAI e repassa para outros provedores de IA, convertendo as chamadas. Aqui, liga o OpenBot ao Sanar Router. |
+| **Responses API / Chat Completions** | Os dois formatos de chamada da API da OpenAI (`/v1/responses` e `/v1/chat/completions`). Alguns servidores só aceitam um deles. |
 
 ## Veja também
 - [Visão geral](visao-geral.md) · [Índice](../README.md)
