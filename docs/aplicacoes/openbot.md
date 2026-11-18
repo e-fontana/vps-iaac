@@ -109,7 +109,9 @@ No Ubuntu 23.10 ou mais novo, o AppArmor pode impedir user namespaces. O própri
 
 ## O que foi e o que não foi testado
 - **Verificado:** a imagem `ghcr.io/nightly-labs/openbot:0.72.0` existe para `linux/arm64`; os manifests renderizam com `kubectl kustomize`; o perfil convertido libera `clone`, `unshare` e `chroot` e bloqueia `mount`, `bpf` e `setns`, como o Docker faria para esse contêiner; o script do Secret foi checado com `bash -n` e um `kubectl` falso.
-- **Não testado:** nada disso rodou ainda no cluster. O projeto testou o OpenBot só no Docker (não em Kubernetes); o sandbox do Electron com o perfil seccomp do containerd, o AppArmor do Ubuntu 24.04, o `openbot login` em contêiner e a NetworkPolicy na prática ainda precisam ser confirmados no primeiro deploy.
+- **Verificado no cluster (18/11/2026, OpenBot 0.72.0, Ubuntu 24.04.5 com `kernel.apparmor_restrict_unprivileged_userns = 1`):** a Application fica `Synced`/`Healthy`; o `seccomp-installer` grava o perfil e o pod do OpenBot sobe sem reinícios; user namespaces funcionam dentro do pod (o AppArmor **não** bloqueou) e os renderers do Chromium rodam num user namespace próprio, ou seja, com o sandbox ligado; `openbot status` mostra a memória `ok` (limite de 4096 MiB, 2 turnos). A NetworkPolicy bloqueia o Postgres, o Redis, o metadata (`169.254.169.254`), a VCN e o IP da VPN, e deixa passar a internet (`api.openbot.run`, `github.com`).
+- **Ruído esperado nos logs:** erros de `dbus` (`system_bus_socket`), `Failed to adjust OOM score` e `Exiting GPU process` são do Chromium sem GPU e sem D-Bus do sistema; o OpenBot segue funcionando. Avisos `A provider did not start` só dizem que aquele CLI ainda não foi baixado.
+- **Não testado:** o `openbot login` em contêiner, o uso remoto pelo app, os provedores (Claude Code, Codex...) e o Computer Use.
 
 ## Veja também
 - [Como o GitOps funciona](../gitops/como-funciona.md) · [Solução de problemas](../suporte/solucao-de-problemas.md) · [Glossário](../comecando/glossario.md)
