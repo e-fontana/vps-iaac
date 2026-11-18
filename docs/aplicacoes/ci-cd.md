@@ -29,10 +29,10 @@ Ajuste os nomes das imagens e o caminho `gitops/manifests/<app>` ao nome da sua 
 | disparo manual (*Actions → Run workflow*) | roda | roda |
 
 - O `build` publica `ghcr.io/<dono>/api:<sha>` e `ghcr.io/<dono>/api-migrate:<sha>`, ambas `linux/arm64`.
-- O `deploy` grava as duas tags no `gitops/manifests/api/kustomization.yaml` do repositório `vpn-iac` (commit "deploy(api): <sha7>"). Depois é só clicar em *Sync* no ArgoCD (veja [Publicar a API](publicar-a-api.md)).
+- O `deploy` grava as duas tags no `gitops/manifests/api/kustomization.yaml` do repositório `vps-iac` (commit "deploy(api): <sha7>"). Depois é só clicar em *Sync* no ArgoCD (veja [Publicar a API](publicar-a-api.md)).
 
 ## O `GITOPS_TOKEN`
-É o token com que o `deploy` consegue **gravar** no repositório `vpn-iac`. Como criá-lo e onde guardá-lo: [Imagem privada e tokens](imagem-privada-e-tokens.md).
+É o token com que o `deploy` consegue **gravar** no repositório `vps-iac`. Como criá-lo e onde guardá-lo: [Imagem privada e tokens](imagem-privada-e-tokens.md).
 
 O job `deploy` declara `environment: prod`. Por isso o token pode ficar:
 - num **secret de ambiente** (*Settings → Environments → prod*), ou
@@ -42,14 +42,14 @@ Se o erro for `Input required and not supplied: token` no passo de checkout, o t
 
 ## Como saber que deu certo
 - No GitHub, aba **Actions**: o `ci` fica verde a cada push; o `build-and-deploy` fica verde numa release.
-- No `vpn-iac` aparece o commit "deploy(api): <sha7>" alterando o `kustomization.yaml`.
+- No `vps-iac` aparece o commit "deploy(api): <sha7>" alterando o `kustomization.yaml`.
 
 ## Se der errado
 | Sintoma | Causa provável |
 |---|---|
 | `Input required and not supplied: token` | `GITOPS_TOKEN` ausente ou no lugar errado (veja acima). |
-| `push` do deploy recusado | A branch `main` do `vpn-iac` tem proteção, ou o token não tem *Contents: Read and write*. |
-| `deploy` falha com 403/404 no checkout | O token não tem acesso ao repositório `vpn-iac`, ou expirou. |
+| `push` do deploy recusado | A branch `main` do `vps-iac` tem proteção, ou o token não tem *Contents: Read and write*. |
+| `deploy` falha com 403/404 no checkout | O token não tem acesso ao repositório `vps-iac`, ou expirou. |
 | Build demora muito | Normal sem cache (QEMU/arm64); as execuções seguintes usam o cache. |
 
 ## Veja também

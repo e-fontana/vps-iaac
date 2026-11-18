@@ -7,18 +7,18 @@
 ## Os dois tokens
 | Token | Para quê | Onde fica | Tipo |
 |---|---|---|---|
-| `GITOPS_TOKEN` | o CI da aplicação gravar a tag nova da imagem no `vpn-iac` | secret do GitHub Actions do repositório **da aplicação** (de ambiente ou de repositório) | *fine-grained*, só o repositório `vpn-iac`, permissão **Contents: Read and write** |
+| `GITOPS_TOKEN` | o CI da aplicação gravar a tag nova da imagem no `vps-iac` | secret do GitHub Actions do repositório **da aplicação** (de ambiente ou de repositório) | *fine-grained*, só o repositório `vps-iac`, permissão **Contents: Read and write** |
 | token de pull | a VPS baixar a imagem privada | Secret do Kubernetes `ghcr-pull`, na namespace da aplicação | **classic**, só o escopo `read:packages` (o GHCR não aceita *fine-grained*) |
 
-O ArgoCD **não precisa de token nenhum**: o `vpn-iac` é público e ele nunca clona o repositório da aplicação.
+O ArgoCD **não precisa de token nenhum**: o `vps-iac` é público e ele nunca clona o repositório da aplicação.
 
 ## Criar o `GITOPS_TOKEN`
 (Os caminhos de menu do GitHub podem mudar.)
 1. GitHub → foto do perfil → **Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token**.
-2. Em *Repository access*, escolha **Only select repositories** e marque `vpn-iac`. Em *Repository permissions*, **Contents: Read and write**.
+2. Em *Repository access*, escolha **Only select repositories** e marque `vps-iac`. Em *Repository permissions*, **Contents: Read and write**.
 3. Defina a validade (quando o token expirar, o CI falha na hora de gravar a tag; anote a data para renovar) e gere. **Copie o token agora:** ele não é mostrado de novo.
 4. No repositório da aplicação: **Settings → Secrets and variables → Actions → New repository secret**, nome `GITOPS_TOKEN`. (Alternativa: *Settings → Environments → prod → Add environment secret*.)
-5. Se a branch `main` do `vpn-iac` tiver proteção, o `push` do CI será recusado.
+5. Se a branch `main` do `vps-iac` tiver proteção, o `push` do CI será recusado.
 
 ## Dar à VPS acesso à imagem privada (`ghcr-pull`)
 1. Gere um token **classic** só com `read:packages`: <https://github.com/settings/tokens/new?scopes=read:packages>.
@@ -46,7 +46,7 @@ O script foi testado contra um registry privado local com senha: o `docker pull`
 |---|---|
 | `ImagePullBackOff` / `unauthorized` | `ghcr-pull` ausente, token expirado ou sem `read:packages`. |
 | O script diz "token vazio ou com caracteres inesperados" | Cole só o token (algo como `ghp_...`), sem espaços. |
-| CI falha ao gravar a tag | `GITOPS_TOKEN` expirado ou sem *Contents: Read and write* no `vpn-iac`. |
+| CI falha ao gravar a tag | `GITOPS_TOKEN` expirado ou sem *Contents: Read and write* no `vps-iac`. |
 
 ## Veja também
 - [CI/CD](ci-cd.md) · [Publicar a API](publicar-a-api.md)

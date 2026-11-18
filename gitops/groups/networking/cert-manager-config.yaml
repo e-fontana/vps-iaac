@@ -12,7 +12,7 @@ metadata:
 spec:
   project: networking
   source:
-    repoURL: https://github.com/e-fontana/vpn-iac.git
+    repoURL: https://github.com/e-fontana/vps-iac.git
     targetRevision: main
     path: gitops/manifests/cert-manager
   destination:

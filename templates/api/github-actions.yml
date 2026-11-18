@@ -7,13 +7,13 @@
 # O build roda a cada push na main, no disparo manual (workflow_dispatch) e quando uma release é publicada:
 # constrói duas imagens linux/arm64 (a VPS é ARM) e as publica no GHCR com a tag do commit.
 # O deploy roda só no disparo manual ou na release (não no push): ele
-# atualiza as duas tags em gitops/manifests/api/kustomization.yaml no repositório de infra (vpn-iac):
+# atualiza as duas tags em gitops/manifests/api/kustomization.yaml no repositório de infra (vps-iac):
 #   ghcr.io/<dono>/api          a aplicação (Dockerfile, alvo padrão)
 #   ghcr.io/<dono>/api-migrate  o Job de migração do Prisma (Dockerfile, alvo "migrate"), usado no hook PreSync
 # O ArgoCD vê o commit, roda as migrações e só então atualiza a API.
 #
 # Precisa do secret GITOPS_TOKEN: token fine-grained com permissão Contents: Read and write só no repositório de infra
-# (veja docs/aplicacoes/imagem-privada-e-tokens.md no vpn-iac). O job deploy usa `environment: prod`, então o secret pode ficar no ambiente
+# (veja docs/aplicacoes/imagem-privada-e-tokens.md no vps-iac). O job deploy usa `environment: prod`, então o secret pode ficar no ambiente
 # "prod" (Settings > Environments) ou no repositório; se ficar no ambiente, o ambiente precisa existir.
 # As versões das actions abaixo vêm da memória de quem escreveu; confira se há versões mais novas.
 # O build ARM roda sob QEMU (lento); o cache do GitHub Actions acelera as execuções seguintes.
@@ -29,7 +29,7 @@ on:
 env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/api
   MIGRATE_IMAGE: ghcr.io/${{ github.repository_owner }}/api-migrate
-  GITOPS_REPO: e-fontana/vpn-iac
+  GITOPS_REPO: e-fontana/vps-iac
 
 jobs:
   build:

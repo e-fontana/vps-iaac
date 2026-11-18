@@ -12,7 +12,7 @@ metadata:
 spec:
   project: observability
   source:
-    repoURL: https://github.com/e-fontana/vpn-iac.git
+    repoURL: https://github.com/e-fontana/vps-iac.git
     targetRevision: main
     path: gitops/manifests/grafana-dashboards
   destination:

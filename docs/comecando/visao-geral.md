@@ -34,7 +34,7 @@ O acesso é só pela **VPN Tailscale**. Nada é publicado na internet aberta: se
 | API | `https://api.eduardofontana.dev` |
 | IP da VPS dentro da VPN (Tailscale) | `100.95.76.83` |
 | Entrar na VPS por SSH | `ssh ubuntu@100.95.76.83` (ou `ssh ubuntu@argocd`) |
-| Repositório do GitOps | `github.com/e-fontana/vpn-iac` (público) |
+| Repositório do GitOps | `github.com/e-fontana/vps-iac` (público) |
 | Repositório da API | `github.com/e-fontana/api` (privado) |
 
 ## O que cada pasta do repositório faz
